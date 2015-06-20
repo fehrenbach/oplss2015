@@ -6,7 +6,7 @@ logical framework based
 
 1. LF = dependently typed lambda-calculus with a universe `Set` of small types
 
-```
+   ```
 A : Set
 -------
 A type
