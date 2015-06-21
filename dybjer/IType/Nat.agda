@@ -123,3 +123,5 @@ ack = iter h succ
 
 -- In Gödel's T we can write primitive recursive functions, and functionals. A challenge is division
 
+
+

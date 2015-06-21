@@ -94,3 +94,8 @@ _<_ : Nat → Nat → Bool
 m < zero = false
 zero < succ n = true
 succ m < succ n = m < n
+
+
+
+
+
