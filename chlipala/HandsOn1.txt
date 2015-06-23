@@ -1,0 +1,63 @@
+I. Expression evaluation & optimization
+
+(a relatively gentle introduction to Coq proving)
+
+Define an interpreter for this language of arithmetic expressions with variables:
+
+$$e ::= x \mid n \mid e + e \mid e \times e$$
+
+where
+
+$$x \in \mathsf{Strings}, n \in \mathbb N$$
+
+Now write two key functions.  First, one to evaluate an expression, given values for the variables:
+
+$$\mathsf{eval} : \mathsf{exp} \to (\mathsf{string} \to \mathsf{nat}) \to \mathsf{nat}$$
+
+Next, an optimizer that applies the algebraic simplifications of your choice (e.g., adding 0 has no effect, adding two constants can be replaced with the constant that is their sum, etc.):
+
+$$\mathsf{optimize} : \mathsf{exp} \to \mathsf{exp}$$
+
+Prove that your optimizer preserves the meanings of programs, w.r.t. your evaluation function.
+
+A handy tactic for this sort of arithmetic: The tactic omega proves any goal that follows from the theory of linear arithmetic, and you can make it available with Require Import Omega..
+
+II. Verifying Peterson's Lock Algorithm
+
+(a more challenging exercise in concurrent program verification)
+
+In this exercise, we'll consider a concurrent program with 2 threads.  In particular, it will be the same counter-incrementing program we looked at in class, but now we will plug in a concrete implementation of locking on top of shared memory, rather than assuming that locks are available as a primitive.
+
+We'll treat the type bool as a synonym for the two-element set {0, 1}, and it will stand for thread IDs in how we interpret these global variables:
+
+bool flag[2]; // Indexed by thread ID, telling whether a thread thinks it's in the critical section
+
+bool turn;    // Gives the ID of a thread whose turn it is to take the lock
+
+Each thread runs the following code, parameterized respectively on the ID of the current thread and the ID of the other thread:
+
+thread(me, other):
+
+  flag[me] = true;
+
+  turn = other;
+
+  while (flag[other] && turn == other);
+
+  local = global;
+
+  global = local + 1;
+
+  flag[me] = false;
+
+The overall program is the parallel composition (use the same definition from lecture) of thread(0, 1) with thread(1, 0).
+
+Formalize this program in Coq as a state machine and prove the same correctness condition from lecture: when we begin with global = 0 (and both flags set to false), we end with global = 2, regardless of the interleaving of threads.
+
+Hint #1: The Wikipedia page for Peterson's algorithm gives an informal definition of an invariant that suffices for a nice proof.  (That page is the inspiration for this whole exercise.)
+
+Hint #2: The most straightforward Coq encoding uses a separate record field for each of the two flags, rather than bothering with any more principled encoding of arrays.  The encoding is a bit verbose, but not complex at the level of single transitions.
+
+Hint #3: As in our example from lecture, look for ways that the "program counters" of threads imply the values of parts of the global state, in phrasing the invariant.  Said state is almost completely determined in that way.
+
+
