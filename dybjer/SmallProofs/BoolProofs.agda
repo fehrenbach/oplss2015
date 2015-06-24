@@ -56,7 +56,15 @@ Pred zero     = Bool
 Pred (succ a) = Bool → (Pred a)
 
 -- i have no fucking clue
-taut : (a : Nat) -> Pred a -> Bool
-taut zero     p = p
-taut (succ a) p = taut a (p {!!})
+-- taut : (a : Nat) -> Pred a -> Bool
+-- taut zero     p = p
+-- taut (succ a) p = taut a (p {!!})
+
+
+-- ¬¬¬P → ¬P
+a : {P : Set} -> (((P -> ⊥) -> ⊥) -> ⊥) -> (P -> ⊥)
+a l = {!!} -- λ z → l (λ z₁ → z₁ z) -- proof by C-c C-a
+
+-- ¬(P ∨ Q) ↔ ¬P&¬Q
+-- ok, I know ∨ is a sum type, but what is that in Agda?
 

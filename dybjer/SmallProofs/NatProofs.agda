@@ -52,3 +52,9 @@ zero == succ m = false
 succ n == zero = false
 succ n == succ m = n == m
 
+
+A : Nat -> Nat -> Nat
+A 0 n = n + 1
+A (succ m) 0 = A m 1
+A (succ m) (succ n) = A m (A (succ m) n)
+

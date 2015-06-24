@@ -42,7 +42,8 @@ Qed.
 Inductive exp : Set :=
 | Var : string -> exp
 | Abs : string -> exp -> exp
-| App : exp -> exp -> exp.
+| App : exp -> exp -> exp
+| Pair : exp -> exp -> exp.
 
 (** We saw this substitution function on the first day. *)
 Fixpoint subst (rep : exp) (x : string) (e : exp) : exp :=
@@ -50,6 +51,7 @@ Fixpoint subst (rep : exp) (x : string) (e : exp) : exp :=
   | Var y => if string_dec y x then rep else Var y
   | Abs y e1 => Abs y (if string_dec y x then e1 else subst rep x e1)
   | App e1 e2 => App (subst rep x e1) (subst rep x e2)
+  | Pair e1 e2 => Pair (subst rep x e1) (subst rep x e2)
   end.
 
 (** Here are a few example terms. *)
@@ -61,6 +63,9 @@ Definition identity2 := App identity identity.
 
 Definition identity4 := App identity2 identity2.
 (** ((\x. x) (\x. x)) ((\x. x) (\x. x)) *)
+
+Definition pairAppId := Pair (App identity identity) (identity).
+Definition pairId := Pair identity identity.
 
 
 (** * Big-step semantics *)
@@ -74,7 +79,11 @@ Inductive bigStep : exp -> exp -> Prop :=
   bigStep e1 (Abs x e1')
   -> bigStep e2 v2
   -> bigStep (subst v2 x e1') v
-  -> bigStep (App e1 e2) v.
+  -> bigStep (App e1 e2) v
+| BigPair : forall e1 v1 e2 v2,
+              bigStep e1 v1
+              -> bigStep e2 v2
+              -> bigStep (Pair e1 e2) (Pair v1 v2).
 
 (** Note that we omit a [Var] case, since variable terms can't be *closed*. *)
 
@@ -96,9 +105,21 @@ Proof.
   econstructor.
 Qed.
 
+Theorem bigStep_pairIdentitiy : bigStep pairAppId pairId.
+Proof.
+  econstructor.
+  econstructor.
+  econstructor.
+  econstructor.
+  econstructor.
+  econstructor.
+Qed.
+  
 (** Which terms are values, that is, final results of execution? *)
 Inductive value : exp -> Prop :=
-| Value : forall x e, value (Abs x e).
+| ValueA : forall x e, value (Abs x e)
+| ValueP : forall v1 v2, value v1 -> value v2 -> value (Pair v1 v2).
+
 (** We're cheating a bit here, *assuming* that the term is also closed. *)
 
 (** Actually, let's prove that [bigStep] only produces values. *)
@@ -110,6 +131,10 @@ Proof.
 
   econstructor.
 
+  assumption.
+
+  econstructor.
+  assumption.
   assumption.
 Qed.
 
@@ -130,7 +155,14 @@ Inductive smallStep : exp -> exp -> Prop :=
 | SmallApp2 : forall e1 e2 e2',
    value e1
    -> smallStep e2 e2'
-   -> smallStep (App e1 e2) (App e1 e2').
+   -> smallStep (App e1 e2) (App e1 e2')
+| SmallPair1 : forall e1 e1' e2,
+                 smallStep e1 e1'
+                 -> smallStep (Pair e1 e2) (Pair e1' e2)
+| SmallPair2 : forall e1 e2 e2',
+                 value e1
+                 -> smallStep e2 e2'
+                 -> smallStep (Pair e1 e2) (Pair e1 e2').
 
 (** Our example evaluation repeated with small steps.
   * We get the same result as last time.  What a coincidence!  Or is it...? *)
@@ -170,8 +202,23 @@ Proof.
   constructor.
   assumption.
 
-  inversion H0; subst.
+  inversion H0; simpl; subst.
+  
+  unfold.
+
+
+
+  
+  inversion H0; simpl.
   econstructor.
+  constructor.
+  constructor.
+
+  destruct H.
+  
+  inversion H0.
+  
+  
   apply IHsmallStep.
   eassumption.
   eassumption.
